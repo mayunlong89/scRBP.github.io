@@ -1,17 +1,62 @@
 title: scRBP
-description: A Python package for single-cell RNA-binding protein analysis
-remote_theme: just-the-docs/just-the-docs
+subtitle: "Single-Cell RNA-Binding Protein Regulon Inference"
+description: >-
+  A systematic, scalable and integrative framework to infer RBP-mediated
+  gene and isoform regulatory networks from single-cell transcriptomes.
+
+remote_theme: mmistakes/minimal-mistakes@4.26.2
+minimal_mistakes_skin: "air"  # options: air, aqua, contrast, dark, dirt, neon, mint, plum, sunrise
 
 url: "https://mayunlong89.github.io"
 baseurl: "/scRBP.github.io"
 
+# Author
+author:
+  name: "Yunlong Ma"
+  bio: "Computational biologist | Single-cell genomics | RBP regulatory networks"
+  location: "China"
+  links:
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/mayunlong89"
+    - label: "PyPI"
+      icon: "fas fa-fw fa-box"
+      url: "https://pypi.org/project/scRBP"
+
+# Navigation
 nav_enabled: true
 
-aux_links:
-  "GitHub":
-    - "https://github.com/mayunlong89/scRBP"
-  "PyPI":
-    - "https://pypi.org/project/scRBP"
+# Site Footer
+footer:
+  links:
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/mayunlong89/scRBP"
+    - label: "PyPI"
+      icon: "fas fa-fw fa-box"
+      url: "https://pypi.org/project/scRBP"
 
+# Plugins
 plugins:
   - jekyll-remote-theme
+  - jekyll-include-cache
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+      type: pages
+    values:
+      layout: single
+      author_profile: true
+      toc: true
+      toc_sticky: true
+
+# Build
+markdown: kramdown
+highlighter: rouge
+permalink: /:categories/:title/
+timezone: Asia/Shanghai
