@@ -1,0 +1,13 @@
+main:
+  - title: "Installation"
+    url: /installation/
+  - title: "Quick Start"
+    url: /quickstart/
+  - title: "Pipeline"
+    url: /pipeline/
+  - title: "API"
+    url: /api/
+  - title: "Tutorials"
+    url: /tutorials/
+  - title: "GitHub"
+    url: https://github.com/mayunlong89/scRBP

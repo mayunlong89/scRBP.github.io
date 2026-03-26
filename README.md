@@ -54,13 +54,13 @@ Raw single-cell data (.h5ad / .feather)
 [Step 7]  scRBP mergeRegulons    ── Merge region-specific GMT files
           │                          (3'UTR / 5'UTR / CDS / Introns)
           ▼
-[Step 8]  scRBP ras              ── Regulon Activity Score (AUCell) per cell / cell type
+[Step 8]  scRBP ras              ── Regulon Activity Score (RAS) per cell / cell type
           │                          (--mode sc | --mode ct)
           ▼
-[Step 9]  scRBP rgs              ── Regulon Gene-Set analysis (MAGMA GWAS enrichment)
+[Step 9]  scRBP rgs              ── Regulon Gene-Set analysis (RGS)
           │                          (--mode sc | --mode ct)
           ▼
-[Step 10] scRBP trs              ── Trait Relevance Score (RAS × RGS integration)
+[Step 10] scRBP trs              ── Trait Relevance Score (TRS, integrating RAS with RGS)
                                      (--mode sc | --mode ct)
 ```
 
@@ -77,7 +77,7 @@ Raw single-cell data (.h5ad / .feather)
 | 5    | `scRBP getPrune`              | Modules TSV, motif files      | Pruned scores (Parquet)                               |
 | 6    | `scRBP getRegulon`            | Pruned scores                 | Regulons GMT (symbol + Entrez)                        |
 | 7    | `scRBP mergeRegulons`         | Multiple GMT files            | Merged GMT                                            |
-| 8    | `scRBP ras` (`--mode sc\|ct`) | Expression matrix, GMT        | AUCell scores, RSS matrix                             |
+| 8    | `scRBP ras` (`--mode sc\|ct`) | Expression matrix, GMT        | single-cell RAS matrix, cell-type RAS matrix          |
 | 9    | `scRBP rgs` (`--mode sc\|ct`) | MAGMA `.genes.raw`, GMT       | RGS scores CSV                                        |
 | 10   | `scRBP trs` (`--mode sc\|ct`) | RAS CSV, RGS CSV              | TRS scores CSV                                        |
 

@@ -13,8 +13,8 @@ baseurl: "/scRBP.github.io"
 # Author
 author:
   name: "Yunlong Ma"
-  bio: "Computational biologist | Single-cell genomics | RBP regulatory networks"
-  location: "China"
+  bio: "Statistical Genetics | Single-cell genomics | RBP regulatory networks"
+  location: "USA"
   links:
     - label: "GitHub"
       icon: "fab fa-fw fa-github"

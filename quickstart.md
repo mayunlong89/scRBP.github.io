@@ -90,8 +90,8 @@ scRBP trs \
 |------|-------------|
 | `regulons.gmt` | RBP regulon gene sets |
 | `ras.csv` | Regulon Activity Scores (RAS) per cell |
-| `rgs.csv` | Regulon-level Genetic association Scores () per cell |
-| `trs.csv` | Integrated Trait Relevance Score per cell for each regulon |
+| `rgs.csv` | Regulon-level Genetic association Scores (RGS) per cell |
+| `trs.csv` | Integrated Trait Relevance Score (TRS) per cell for each regulon |
 
 ---
 
