@@ -37,8 +37,8 @@ adata.write("data_normalized.h5ad")
 ### Single-cell mode (`--mode sc`)
 
 ```bash
-# Step 1: Downsample to ~5000 cells for GRN inference
-scRBP getSketch --input data_normalized.h5ad --output sketch.h5ad --n_cells 5000
+# Step 1: Downsample to ~50000 cells for GRN inference
+scRBP getSketch --input data_normalized.h5ad --output sketch.h5ad --n_cells 50000
 
 # Step 2: Infer GRN (run multiple seeds for robustness)
 for seed in {1..30}; do

@@ -11,16 +11,16 @@ and produces disease-relevant RBP regulon rankings.
 ```
 Raw scRNA-seq (.h5ad)
         ↓
-  [1] getSketch       → Stratified subsampling
+  [1] getSketch       → Stratified subsampling (Optional)
   [2] getGRN          → GRN inference (GRNBoost2/GENIE3)
-  [3] getMerge_GRN    → Consensus merging (N seeds)
+  [3] getMerge_GRN    → Consensus merging (N seeds, default 30)
   [4] getModule       → Regulon candidate extraction
   [5] getPrune        → Motif enrichment pruning
   [6] getRegulon      → GMT file generation
   [7] mergeRegulons   → Region consolidation
         ↓
   [8] ras             → Regulon Activity Score (RAS)
-  [9] rgs             → GWAS Enrichment Score (RGS)
+  [9] rgs             → Regulon-level Genetic association Score (RGS)
   [10] trs            → Trait Relevance Score (TRS)
         ↓
    Disease-relevant RBP rankings
@@ -36,7 +36,7 @@ Stratified cell downsampling using **GeoSketch** to make large datasets tractabl
 scRBP getSketch \
   --input data.h5ad \
   --output sketch.h5ad \
-  --n_cells 5000
+  --n_cells 50000
 ```
 
 | Parameter | Description |
