@@ -1,4 +1,4 @@
-<p align="left">
+<p align="center">
   <img src="https://raw.githubusercontent.com/mayunlong89/scRBP/main/Examples/scRBP_logo.png" width="250">
 </p>
 
