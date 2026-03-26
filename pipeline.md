@@ -105,7 +105,7 @@ scRBP getPrune \
 
 ---
 
-## Step 6: getRegulon
+## Step 6: getRegulon {#step-6-getRegulon}
 
 Generate **GMT files** (symbol and Entrez formats) from pruned regulons.
 
@@ -118,7 +118,7 @@ scRBP getRegulon \
 
 ---
 
-## Step 7: mergeRegulons
+## Step 7: mergeRegulons {#step-7-mergeRegulons}
 
 Consolidate region-specific GMT files into a unified regulon set.
 
@@ -161,15 +161,19 @@ scRBP rgs \
   --magma_path /path/to/magma
 ```
 
-> Requires MAGMA binary. See [Installation](/installation/#optional-magma-for-gwas-enrichment).
+> Requires MAGMA binary. See [GWASTutorial](https://cloufield.github.io/GWASTutorial/09_Gene_based_analysis/) and download MAGMA from [CNCR](https://cncr.nl/research/magma/).
 
 ---
 
-## Step 10: trs
+## Step 10: trs {#step-10-trs}
 
 Integrate RAS and RGS into a unified **Trait Relevance Score (TRS)**:
 
-$$\text{TRS} = \text{norm(RAS)} + \text{norm(RGS)} - \lambda \times |\text{norm(RAS)} - \text{norm(RGS)}|$$
+
+$$
+\text{TRS} = \text{norm(RAS)} + \text{norm(RGS)} - \lambda \times |\text{norm(RAS)} - \text{norm(RGS)}|
+$$
+
 
 ```bash
 scRBP trs \

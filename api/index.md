@@ -19,16 +19,16 @@ Run `scRBP --help` or `scRBP <command> --help` for full option listings.
 
 | Command | Description |
 |---------|-------------|
-| `getSketch` | Stratified cell downsampling via GeoSketch |
+| `getSketch` | Stratified cell downsampling via GeoSketch (Optional) |
 | `getGRN` | GRN inference using GRNBoost2 or GENIE3 |
 | `getMerge_GRN` | Consensus network merging across seeds |
 | `getModule` | Regulon candidate extraction |
 | `getPrune` | Motif enrichment filtering via ctxcore |
 | `getRegulon` | GMT file generation (symbol + Entrez) |
 | `mergeRegulons` | Region-specific GMT consolidation |
-| `ras` | Regulon Activity Score (AUCell) |
-| `rgs` | MAGMA gene-set GWAS enrichment |
-| `trs` | Trait Relevance Score integration |
+| `ras` | Regulon Activity Score (RAS) |
+| `rgs` | Regulon-level Genetic association Score (RGS) |
+| `trs` | Trait Relevance Score by integrating RAS and RGS |
 
 ---
 

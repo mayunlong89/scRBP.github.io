@@ -18,7 +18,7 @@ A complete walkthrough from raw scRNA-seq data to final regulons.
 
 ```bash
 # 1. Preprocess and downsample
-scRBP getSketch --input pbmc.h5ad --output pbmc_sketch.h5ad --n_cells 5000
+scRBP getSketch --input pbmc.h5ad --output pbmc_sketch.h5ad --n_cells 50000
 
 # 2. Infer GRN with 30 seeds
 for seed in $(seq 1 30); do

@@ -85,13 +85,14 @@ feature_row2:
 pip install scRBP
 
 # Step 1: Downsample cells
-scRBP getSketch --input data.h5ad --output sketch.h5ad --n_cells 5000
+scRBP getSketch --input data.h5ad --output sketch.h5ad --n_cells 50000
 
 # Step 2: Infer GRN
 scRBP getGRN --input sketch.h5ad --output grn.tsv --method grnboost2
 
 # Step 3: Compute Regulon Activity Score
 scRBP ras --input data.h5ad --regulons regulons.gmt --output ras.csv
+
 ```
 
 [Full Pipeline Guide](/pipeline/){: .btn .btn--primary .btn--large}
@@ -103,8 +104,7 @@ scRBP ras --input data.h5ad --regulons regulons.gmt --output ras.csv
 
 If you use scRBP in your research, please cite:
 
-> **Ma Y, et al.** scRBP: A systematic framework for inferring RNA-binding protein regulons
-> from single-cell transcriptomes. *(2024)*
+> Ma Y. *et al.* Decoding disease-associated RNA-binding protein-mediated regulatory networks through polygenic enrichment across diverse cellular contexts. (2026)
 > GitHub: [https://github.com/mayunlong89/scRBP](https://github.com/mayunlong89/scRBP)
 
 ---
