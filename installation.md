@@ -54,6 +54,27 @@ pip install scRBP
 
 ---
 
+## Install on HPC / Cluster
+
+```bash
+# Load modules (example for SLURM clusters)
+module load anaconda3
+
+# Create isolated environment
+conda create -n scrbp python=3.10 -y
+conda activate scrbp
+
+# Install with all dependencies
+pip install scRBP
+
+# Verify
+scRBP --help
+```
+
+> For large datasets (>300,000 cells), we recommend running `getSketch` first to downsample to ~50,000 cells before GRN inference.
+
+---
+
 ## Optional: MAGMA for GWAS Enrichment
 
 The `rgs` step requires the [MAGMA binary](https://ctg.cncr.nl/software/magma) for gene-set GWAS enrichment analysis.
