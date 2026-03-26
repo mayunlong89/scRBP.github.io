@@ -1,0 +1,14 @@
+title: scRBP
+description: A Python package for single-cell RNA-binding protein analysis
+theme: just-the-docs
+
+url: "https://mayunlong89.github.io"
+baseurl: "/scRBP.github.io"
+
+nav_enabled: true
+
+aux_links:
+  "GitHub":
+    - "https://github.com/mayunlong89/scRBP"
+  "PyPI":
+    - "https://pypi.org/project/scRBP"
