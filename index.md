@@ -129,8 +129,8 @@ Raw single-cell data (.h5ad / .feather)
 | 9 | `rgs` | MAGMA `.genes.raw`, `.gmt` | RGS scores `.csv` |
 | 10 | `trs` | RAS `.csv`, RGS `.csv` | TRS scores `.csv` |
 
-[View Full Pipeline]({{ "/pipeline/" | relative_url }}){: .btn .btn--primary}
-[API Reference]({{ "/api/" | relative_url }}){: .btn .btn--info}
+[View Full Pipeline](/scRBP.github.io/pipeline/){: .btn .btn--primary}
+[API Reference](/scRBP.github.io/api/){: .btn .btn--info}
 
 ---
 
@@ -157,8 +157,8 @@ scRBP getRegulon   --input pruned/ --output regulons.gmt
 scRBP ras          --input data.h5ad --regulons regulons.gmt --output ras.csv
 ```
 
-[Full Quick Start Guide]({{ "/quickstart/" | relative_url }}){: .btn .btn--primary .btn--large}
-[Installation Guide]({{ "/installation/" | relative_url }}){: .btn .btn--info .btn--large}
+[Full Quick Start Guide](/scRBP.github.io/quickstart/){: .btn .btn--primary .btn--large}
+[Installation Guide](/scRBP.github.io/installation/){: .btn .btn--info .btn--large}
 
 ---
 
