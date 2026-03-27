@@ -156,6 +156,6 @@ scRBP trs \
 
 ## Next Steps
 
-- [Full Pipeline Documentation](/pipeline/)
-- [API Reference](/api/)
-- [Tutorials](/tutorials/)
+- [Full Pipeline Documentation]({{ "/pipeline/" | relative_url }})
+- [API Reference]({{ "/api/" | relative_url }})
+- [Tutorials]({{ "/tutorials/" | relative_url }})
