@@ -78,7 +78,7 @@ scRBP getRegulon \
   --out-symbol regulons_symbol.gmt \
   --out-entrez regulons_entrez.gmt
 
-# Step 7: Merge region-specific GMT files (3UTR / 5UTR / CDS / Introns)
+# Step 7: Merge region-specific GMT files (3UTR / 5UTR / CDS / Intronic)
 scRBP mergeRegulons \
   --base_dir results/ \
   --input regulons_symbol.gmt \
@@ -120,7 +120,7 @@ scRBP ras \
 ## 4. GWAS Disease Enrichment (Optional)
 
 ```bash
-# Step 9: GWAS enrichment via MAGMA
+# Step 9: Compute regulon-level genetic association scores (RGS) using MAGMA
 scRBP rgs \
   --mode ct \
   --magma /path/to/magma \
@@ -154,8 +154,3 @@ scRBP trs \
 
 ---
 
-## Next Steps
-
-- [Full Pipeline Documentation](/scRBP.github.io/pipeline/)
-- [API Reference](/scRBP.github.io/api/)
-- [Tutorials](/scRBP.github.io/tutorials/)

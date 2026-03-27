@@ -66,7 +66,7 @@ feature_row:
 
 ## What scRBP Does
 
-**scRBP** (*Single-cell RNA-Binding Protein Regulon Inference*) is a command-line toolkit for comprehensive analysis of RNA-binding proteins (RBPs) in single-cell RNA-seq data. It provides a systematic, scalable and integrative framework to infer RBP-mediated gene and isoform regulatory networks ("regulons") from single-cell transcriptomes and prioritize networks underlying complex genetic traits and disorders.
+**scRBP** (*Single-cell RNA-Binding Protein Regulon Inference*) is a command-line toolkit for comprehensive analysis of RNA-binding proteins (RBPs) in single-cell RNA-seq data. It provides a systematic, scalable and integrative framework to infer RBP-mediated gene and isoform regulatory networks ("regulons") from single-cell transcriptomes and prioritize critical regulons underlying complex traits and diseases.
 
 scRBP is comprised of six main modules:
 

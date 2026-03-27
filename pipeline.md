@@ -45,7 +45,7 @@ scRBP getSketch \
 |-----------|------|---------|-------------|
 | `--input` | path | required | Input `.h5ad` or `.feather` file |
 | `--output` | path | required | Output file (`.h5ad` / `.feather` / `.csv` / `.npz`) |
-| `--n_cells` | int | 250000 | Target total number of cells to sketch |
+| `--n_cells` | int | 50000 | Target total number of cells to sketch |
 | `--n_pca` | int | 100 | Number of PCA components for GeoSketch |
 | `--celltype_col` | str | `celltype` | Column in `adata.obs` for cell-type labels (`.h5ad` only) |
 | `--min_cells_per_type` | int | 50 | Minimum cells per cell type to guarantee (`.h5ad` only) |
@@ -165,7 +165,7 @@ scRBP getPrune \
 |-----------|------|---------|-------------|
 | `--rbp_targets` | path | required | Module `.tsv` from `getModule` |
 | `--motif_rbp_links` | path | required | Motif–RBP annotation `.feather` (maps motifs to RBPs) |
-| `--motif_target_ranks` | path | required | Genome rankings `.feather` (e.g. `hg38_500bp_rankings.feather`) |
+| `--motif_target_ranks` | path | required | Target gene/isoform rankings `.feather` (e.g. homo_sapiens_616RBPs_20746motifs_gene_rank_3UTR.feather`) |
 | `--save_dir` | path | required | Output directory for pruned scores (Parquet) |
 | `--rank_threshold` | int | 1500 | Top-N rank cutoff for motif target enrichment |
 | `--auc_threshold` | float | 0.05 | AUC threshold for enrichment significance |
@@ -176,7 +176,7 @@ scRBP getPrune \
 | `--only_rbp` | str | None | Restrict pruning to a specific RBP (for debugging) |
 | `--only_strategy` | str | None | Restrict to a specific selection strategy |
 
-> Download motif databases from [pySCENIC resources](https://pyscenic.readthedocs.io/en/latest/installation.html#auxiliary-datasets) or [cisTarget resources](https://resources.aertslab.org/cistarget/).
+> Download motif databases from [scRBP resources](https://pyscenic.readthedocs.io/en/latest/installation.html#auxiliary-datasets).
 
 ---
 
