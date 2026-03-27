@@ -162,11 +162,11 @@ scRBP getPrune \
 ```
 
 | Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
+|---|---|---|---|
 | `--rbp_targets` | path | required | Module `.tsv` from `getModule` |
-| `--motif_rbp_links` | path | required | Motif–RBP annotation `.feather` (maps motifs to RBPs) |
-| `--motif_target_ranks` | path | required | Target gene/isoform rankings `.feather` (e.g. `homo_sapiens_616RBPs_20746motifs_gene_rank_3UTR.feather`) |
-| `--save_dir` | path | required | Output directory for pruned scores (`Parquet`) |
+| `--motif_rbp_links` | path | required | Motif-RBP annotation `.feather` (maps motifs to RBPs) |
+| `--motif_target_ranks` | path | required | Rankings `.feather` (e.g. `homo_sapiens_616RBPs_20746motifs_gene_rank_3UTR.feather`) |
+| `--save_dir` | path | required | Output directory for pruned scores (Parquet) |
 | `--rank_threshold` | int | 1500 | Top-N rank cutoff for motif target enrichment |
 | `--auc_threshold` | float | 0.05 | AUC threshold for enrichment significance |
 | `--nes_threshold` | float | 3.0 | Normalized Enrichment Score (NES) threshold |
