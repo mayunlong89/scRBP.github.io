@@ -84,7 +84,7 @@ scRBP ras    --input data.h5ad   --regulons regulons.gmt \
 ## More Tutorials
 
 Additional tutorials will be added covering:
-- Isoform-level regulatory network inference
+- [Isoform-level regulatory network inference](https://github.com/mayunlong89/scRBP)
 - Visualization of RBP regulon activity in UMAP
 - Integration with Scanpy/Seurat workflows
 - Comparative analysis across datasets
