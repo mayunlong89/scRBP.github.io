@@ -18,7 +18,7 @@ author:
   links:
     - label: "GitHub"
       icon: "fab fa-fw fa-github"
-      url: "https://github.com/mayunlong89"
+      url: "https://github.com/mayunlong89/scRBP"
     - label: "PyPI"
       icon: "fas fa-fw fa-box"
       url: "https://pypi.org/project/scRBP"
