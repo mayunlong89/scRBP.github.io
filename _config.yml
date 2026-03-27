@@ -35,12 +35,14 @@ footer:
     - label: "PyPI"
       icon: "fas fa-fw fa-box"
       url: "https://pypi.org/project/scRBP"
+    - label: "Issues"
+      icon: "fas fa-fw fa-bug"
+      url: "https://github.com/mayunlong89/scRBP/issues"
 
 # Plugins
 plugins:
   - jekyll-remote-theme
   - jekyll-include-cache
-  - jekyll-feed
   - jekyll-sitemap
   - jekyll-seo-tag
 
