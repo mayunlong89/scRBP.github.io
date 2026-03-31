@@ -7,7 +7,7 @@ header:
   overlay_filter: 0.6
   actions:
     - label: "<i class='fas fa-download'></i> pip install scRBP"
-      url: "/scRBP.github.io/installation/"
+      url: "https://mayunlong89.github.io/scRBP.github.io/installation/"
     - label: "<i class='fab fa-github'></i> GitHub"
       url: "https://github.com/mayunlong89/scRBP"
     - label: "<i class='fas fa-box'></i> PyPI"
@@ -29,20 +29,20 @@ feature_row:
       Construct high-confidence RBP–gene and RBP–isoform regulatory networks
       using GRNBoost2/GENIE3 with motif-binding evidence pruning via ctxcore.
       Supports gene-level (`--mode gene`) and isoform-level (`--mode isoform`) inference.
-    url: "/scRBP.github.io/pipeline/"
+    url: "https://mayunlong89.github.io/scRBP.github.io/pipeline/"
     btn_label: "View Pipeline"
     btn_class: "btn--primary"
   - title: "<i class='fas fa-chart-bar'></i> Regulon Activity Scoring"
     excerpt: >
       Quantify RBP regulon activity per cell or per cell type using the AUCell algorithm (RAS).
       Statistical significance is assessed via Monte Carlo sampling with matched null regulons.
-    url: "/scRBP.github.io/pipeline/#step-8-ras"
+    url: "https://mayunlong89.github.io/scRBP.github.io/pipeline/#step-8-ras"
     btn_label: "Learn More"
     btn_class: "btn--primary"
   - title: "<i class='fas fa-dna'></i> Disease-Associated Regulons"
     excerpt: >
       Link GWAS genetic signals to RBP regulons (RGS),then integrate with RAS to compute unified Trait Relevance Scores (TRS).
-    url: "/scRBP.github.io/pipeline/#step-9-rgs"
+    url: "https://mayunlong89.github.io/scRBP.github.io/pipeline/#step-9-rgs"
     btn_label: "Learn More"
     btn_class: "btn--primary"
 ---
