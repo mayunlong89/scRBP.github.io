@@ -20,8 +20,8 @@ excerpt: >
 intro:
   - excerpt: >
       scRBP is a command-line toolkit that integrates GRN inference, motif enrichment,
-      GWAS-based genetic scoring, and regulon activity quantification into a unified
-      10-step pipeline — from raw scRNA-seq data to disease-relevant RBP rankings.
+      Regulong-level polygenic scoring, and regulon activity quantification into a unified
+      10-step pipeline — from raw scRNA-seq data to disease-relevant RBP-regulon rankings.
 
 feature_row:
   - title: "<i class='fas fa-project-diagram'></i> RBP Regulon Inference"
@@ -41,8 +41,7 @@ feature_row:
     btn_class: "btn--primary"
   - title: "<i class='fas fa-dna'></i> Disease-Associated Regulons"
     excerpt: >
-      Link RBP regulons to human disease traits via MAGMA-based GWAS enrichment (RGS),
-      then integrate with RAS to compute unified Trait Relevance Scores (TRS).
+      Link GWAS genetic signals to RBP regulons (RGS),then integrate with RAS to compute unified Trait Relevance Scores (TRS).
     url: "/scRBP.github.io/pipeline/#step-9-rgs"
     btn_label: "Learn More"
     btn_class: "btn--primary"
@@ -166,7 +165,7 @@ scRBP ras          --input data.h5ad --regulons regulons.gmt --output ras.csv
 
 If you use scRBP in your research, please cite:
 
-> Ma Y. *et al.* Decoding disease-associated RNA-binding protein-mediated regulatory networks through polygenic enrichment across diverse cellular contexts. (2026)
+> Ma Y. *et al.* ***Decoding cell-specific RNA-binding protein regulatory networks across development and disease***. (2026)
 
 ---
 
