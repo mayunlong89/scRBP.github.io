@@ -5,26 +5,35 @@ toc: true
 toc_sticky: true
 ---
 
-scRBP implements a **10-step command-line pipeline** that takes raw single-cell RNA-seq data
-and produces disease-relevant RBP regulon rankings.
+scRBP implements a **12-step command-line pipeline** that takes raw single-cell RNA-seq data
+and produces trait-relevant RBP regulon rankings, using **parallel common- and rare-variant**
+genetic association models.
 
 ```
 Raw scRNA-seq (.h5ad / .feather)
         ↓
-  [1] getSketch       → Stratified subsampling (Optional)
-  [2] getGRN          → GRN inference (GRNBoost2/GENIE3, --mode gene/isoform)
-  [3] getMerge_GRN    → Consensus merging (N seeds, default 30)
-  [4] getModule       → Regulon candidate extraction
-  [5] getPrune        → Motif enrichment pruning
-  [6] getRegulon      → GMT file generation (symbol + Entrez)
-  [7] mergeRegulons   → Merge 4 region GMT files (3UTR/5UTR/CDS/Introns)
+  [1]  getSketch       → Stratified GeoSketch downsampling (optional)
+  [2]  getMetacell     → Mini-metacell aggregation for the GRN branch (optional)
+  [3]  getGRN          → GRN inference (GRNBoost2/GENIE3, --mode gene/isoform)
+  [4]  getMerge_GRN    → Consensus merging (N seeds, default 30)
+  [5]  getModule       → Regulon candidate extraction
+  [6]  getPrune        → Motif enrichment pruning
+  [7]  getRegulon      → GMT generation (symbol + Entrez)
+  [8]  mergeRegulons   → Merge 4 region GMT files (3UTR / 5UTR / CDS / Introns)
         ↓
-  [8] ras             → Regulon Activity Score (RAS, --mode sc/ct)
-  [9] rgs             → Regulon-level Genetic association Score (RGS, --mode sc/ct)
-  [10] trs            → Trait Relevance Score (TRS, --mode sc/ct)
+  [9]  ras             → Regulon Activity Score (RAS, --mode sc/ct)
+  [10] rgs             → Common-variant RGS via MAGMA (--mode sc/ct)
+  [11] rgs_rare        → Rare-variant RGS via competitive regression (--mode sc/ct)
+  [12] trs             → Trait-Relevance Score (RAS × RGS, common OR rare)
         ↓
-   Disease-relevant RBP rankings
+   Trait-relevant RBP regulon rankings
 ```
+
+> Steps 2 (**getMetacell**) and 11 (**rgs_rare**) are new in v0.1.4.1.
+> `getMetacell` densifies the input for the GRN branch when dropout is heavy;
+> the RAS branch always uses real single cells.
+> `rgs_rare` runs in parallel to `rgs` and its output can be fed into `scRBP trs`
+> to obtain a **rare-variant** TRS with the same command.
 
 ---
 
@@ -55,7 +64,62 @@ scRBP getSketch \
 
 ---
 
-## Step 2: getGRN {#step-2-getGRN}
+## Step 2: getMetacell {#step-2-getMetacell}
+
+Aggregate transcriptomically similar single cells into **mini-metacells** (default 10 cells per unit) to densify the expression matrix for downstream GRN inference. Single-cell RNA-seq is sparse (high dropout), which is especially damaging for **RBP** regulators — their post-transcriptional co-regulation typically has a smaller dynamic range than transcription-factor networks. Pooling similar cells markedly improves signal-to-noise for `getGRN`.
+
+**Relationship to `getSketch` (complementary, not alternatives):**
+
+- **`getSketch`**   — *selects* a diversity-preserving subset of **real** single cells → feed the **activity (RAS) branch**, which needs real cells to keep cell-type resolution.
+- **`getMetacell`** — *aggregates* similar cells into **dense** pseudo-cells → feed the **GRN branch** (`getGRN → getModule → getPrune`).
+
+For large multi-tissue atlases the two are composable:
+`getSketch` (pre-thin) → `getMetacell --within_celltype` → `getGRN`.
+Metacells are built **within each cell type** by default, so cell-type boundaries are preserved.
+
+> **Normalisation contract.** Cell *similarity* (which cells to pool) is computed on a
+> library-size-normalised, log1p-transformed PCA embedding, but the metacell *profile*
+> aggregates the **original raw counts** (sum by default). Feed `getMetacell` raw/linear
+> counts, exactly as you would feed `getGRN` afterwards.
+
+```bash
+scRBP getMetacell \
+  --input             lung_lineage.h5ad \
+  --output            lung_metacell.feather \
+  --metacell_size     10 \
+  --method            knn \
+  --within_celltype \
+  --celltype_col      cell_type \
+  --min_metacell_size 5
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `--input` | path | required | `.h5ad` (with cell-type column) or `.feather` (gene × cell). |
+| `--output` | path | required | Output matrix (gene × metacell). `.h5ad` / `.csv` / `.feather` / `.npz`; directly consumable by `getGRN`. |
+| `--metacell_size` | int | 10 | Target cells per metacell (atlas typical 10–15). |
+| `--method` | str | `knn` | `knn` (greedy nearest-neighbour, most faithful), `kmeans` (MiniBatchKMeans, scalable), or `random` (baseline). |
+| `--agg` | str | `sum` | Aggregate pooled cells by `sum` (default) or `mean` of original counts. |
+| `--within_celltype` | flag | on | Pool only within each cell type. Disable via `--global_pooling`. |
+| `--global_pooling` | flag | off | Pool across all cells (not recommended when a cell-type annotation is available). |
+| `--celltype_col` | str | `celltype` | Column in `adata.obs` holding cell-type labels. |
+| `--min_metacell_size` | int | 1 | Merge metacells smaller than this into the nearest one (recommended `~metacell_size // 2`). |
+| `--n_pca` | int | 50 | PCA components for the similarity embedding (`knn`/`kmeans`). |
+| `--seed` | int | 42 | Random seed. |
+| `--save_members` | flag | off | Also write `<out>_metacell_members.csv` mapping metacells to source cells. |
+
+**Outputs**
+
+| File | Description |
+|------|-------------|
+| `<output>` | Metacell expression matrix (gene × metacell). |
+| `<output_prefix>_metacell_to_celltype.csv` | `cell`, `cell_type`, `n_cells` — drop-in for `ras --celltypes-csv`. |
+| `<output_prefix>_metacell_summary.csv` | Per-cell-type size statistics. |
+| `<output_prefix>_metacell_members.csv` | *(optional, `--save_members`)* Full source-cell membership table. |
+
+---
+
+## Step 3: getGRN {#step-3-getGRN}
 
 GRN inference using **GRNBoost2** or **GENIE3**. Supports two modes: **gene-level** (RBP→gene) and **isoform-level** (RBP→isoform). Run this command with multiple seeds (e.g., 30 times) for robust consensus networks.
 
@@ -96,7 +160,7 @@ scRBP getGRN \
 
 ---
 
-## Step 3: getMerge_GRN {#step-3-getMerge_GRN}
+## Step 4: getMerge_GRN {#step-4-getMerge_GRN}
 
 Merge GRN results across **N seeds** for a robust consensus network. Uses a glob pattern to match all seed output files.
 
@@ -104,7 +168,8 @@ Merge GRN results across **N seeds** for a robust consensus network. Uses a glob
 scRBP getMerge_GRN \
   --pattern "grn_seed*.tsv" \
   --output merged_grn.tsv \
-  --present_rate 0.0 \
+  --n_present 10 \
+  --present_rate 0.3 \
   --corr-threshold 0.0
 ```
 
@@ -113,14 +178,14 @@ scRBP getMerge_GRN \
 | `--pattern` | str | required | Glob pattern matching all seed GRN `.tsv` files (e.g. `"grn_seed*.tsv"`) |
 | `--output` | path | required | Output merged consensus GRN `.tsv` |
 | `--corr-threshold` | float | 0.0 | Filter edges with `abs(mean Correlation)` ≤ threshold |
-| `--n_present` | int | 0 | Minimum number of seed runs in which an edge must appear |
-| `--present_rate` | float | 0.0 | Minimum presence rate (n\_present / N\_runs) to keep an edge |
+| `--n_present` | int | 10 | Minimum number of seed runs in which an edge must appear |
+| `--present_rate` | float | 0.3 | Minimum presence rate (n\_present / N\_runs) to keep an edge |
 
 **Output columns:** `RBP`, `Target`, `mean_Importance`, `mean_Correlation`, `n_present`, `present_rate`, `Mode`
 
 ---
 
-## Step 4: getModule {#step-4-getModule}
+## Step 5: getModule {#step-5-getModule}
 
 Extract regulon candidate modules from the merged GRN using multiple selection strategies (Top-N and percentile-based).
 
@@ -146,7 +211,7 @@ scRBP getModule \
 
 ---
 
-## Step 5: getPrune {#step-5-getPrune}
+## Step 6: getPrune {#step-6-getPrune}
 
 Filter regulon candidates using **motif-binding enrichment** via ctxcore (NES scoring). Requires pre-built motif annotation and genome ranking databases.
 
@@ -180,7 +245,7 @@ scRBP getPrune \
 
 ---
 
-## Step 6: getRegulon {#step-6-getRegulon}
+## Step 7: getRegulon {#step-7-getRegulon}
 
 Convert pruned ctxcore scores to standard **GMT files** in both gene-symbol and Entrez-ID formats.
 
@@ -211,7 +276,7 @@ scRBP getRegulon \
 
 ---
 
-## Step 7: mergeRegulons {#step-7-mergeRegulons}
+## Step 8: mergeRegulons {#step-8-mergeRegulons}
 
 Merge region-specific GMT files (3'UTR, 5'UTR, CDS, Introns) from multiple run directories into a single unified regulon set.
 
@@ -239,7 +304,7 @@ scRBP mergeRegulons \
 
 ---
 
-## Step 8: ras {#step-8-ras}
+## Step 9: ras {#step-9-ras}
 
 Compute **Regulon Activity Scores (RAS)** using the AUCell algorithm. Supports single-cell (`--mode sc`) and cell-type aggregated (`--mode ct`) modes.
 
@@ -265,16 +330,22 @@ scRBP ras \
 | `--mode` | str | `ct` | Scoring mode: `sc` (per cell) or `ct` (per cell type) |
 | `--matrix` | path | required | Expression matrix (`.h5ad` / `.feather` / `.loom` / `.csv`) |
 | `--regulons` | path | required | Regulon GMT file from `mergeRegulons` |
-| `--out` | path | required | Output RAS file |
-| `--out_format` | str | `csv` | Output format: `csv`, `loom`, or `both` |
-| `--celltypes-csv` | path | None | CSV with `cell_id`, `cell_type` columns (required for `--mode ct`) |
-| `--n_workers` | int | 4 | Number of workers for AUCell |
-| `--min_genes` | int | 1 | Drop regulons with fewer than `min_genes` targets |
-| `--to_upper` | flag | False | Uppercase gene symbols when matching to regulons |
+| `--out` | path | required | Output RAS file / prefix |
+| `--out_format` | str | `loom` | Output format: `csv`, `loom`, or `both`. |
+| `--no-csv` | flag | False | Force disable writing CSV even if `--out_format` includes csv. |
+| `--no-loom` | flag | False | Force disable writing LOOM even if `--out_format` includes loom. |
+| `--csv_layout` | str | `regulons_by_cells` | CSV orientation: `regulons_by_cells`, `cells_by_regulons`, or `both`. |
+| `--celltypes-csv` | path | None | CSV with `cell_id`, `cell_type` columns (required for `--mode ct`). |
+| `--n_workers` | int | 4 | Number of workers for AUCell. |
+| `--min_genes` | int | 1 | Drop regulons with fewer than `min_genes` targets. |
+| `--to_upper` | flag | False | Uppercase gene symbols when matching to regulons. |
+| `--emit-expr-stats` | flag | on | Emit `<out>_expr_stats.tsv` (per-gene `mean_expr`, `pct_detected`) reused by `rgs` / `rgs_rare` for null matching. |
+| `--no-expr-stats` | flag | off | Disable expr-stats output. |
+| `--expr-stats-out` | path | auto | Custom path for the expr-stats TSV. |
 
 ---
 
-## Step 9: rgs {#step-9-rgs}
+## Step 10: rgs {#step-10-rgs}
 
 **MAGMA gene-set analysis** for GWAS enrichment. Computes Regulon-level Genetic association Scores (RGS) with matched null regulons controlling for 4 confounders: number of SNPs, number of parameters, mean gene expression, and percent detected.
 
@@ -311,7 +382,107 @@ scRBP rgs \
 
 ---
 
-## Step 10: trs {#step-10-trs}
+## Step 11: rgs_rare {#step-11-rgs-rare}
+
+**Rare-variant** analogue of `rgs`. Instead of MAGMA common-variant gene results, `rgs_rare` accepts gene-level rare-variant evidence from external frameworks — **TADA / extTADA**, SCHEMA-style burden, SAIGE-GENE+, REGENIE, STAAR-O — and fits a competitive gene-set regression:
+
+$$
+\text{rare\_score}_g = \beta_0 + \beta_s \cdot I(g \in \text{regulon}_s) + \gamma \cdot C_g + \varepsilon_g
+$$
+
+`rare_score_g` is a winsorised and z-standardised gene-level rare score. For frequentist inputs it is `-log10(P)`; for TADA-like Bayesian inputs it is `logBF`. The regression covariate `C_g` is kept **purely genetic** (the coding-opportunity term `z_log_union_CDS_length`), so the primary regression is not contaminated by expression signal. Expression covariates (`mean_expr`, `pct_detected`) are used **only for covariate-matched null regulon construction** in `--mode ct`, mirroring `rgs`.
+
+`RGS_z = beta_s / SE(beta_s)`. Output columns and file naming mirror `rgs`, so downstream `scRBP trs` consumes the rare RGS with **no additional plumbing** — a **rare-variant TRS** is obtained by pointing `trs --rgs-csv` at the rare `.gsa_RGS.csv`.
+
+**Two modes:**
+
+- **`--mode sc`** — test real regulons only; write a MAGMA-like RGS CSV.
+- **`--mode ct`** — additionally build covariate-matched null regulons (3-D matching on CDS length × mean expression × detection rate) and emit `RBP__REAL` / `RBP__NULL_XXXX` rows directly compatible with `scRBP trs`.
+
+> `rgs_rare` does **not** perform primary rare-variant association testing — it consumes gene-level rare summary statistics produced upstream (TADA, burden, SAIGE-GENE+, STAAR-O, …).
+
+```bash
+# Single-cell with TADA-like logBF input
+scRBP rgs_rare \
+  --mode          sc \
+  --rare-summary  tada_asd_gene_scores.tsv \
+  --rare-gene-col gene_symbol \
+  --rare-id-type  symbol \
+  --score-mode    logbf --logbf-col logBF \
+  --sets          regulons_symbol.gmt --id-type symbol \
+  --out           rgs_rare_out/asd_sc
+
+# Cell-type with SAIGE-GENE+ / burden P-values, reusing ras --emit-expr-stats
+scRBP rgs_rare \
+  --mode          ct \
+  --rare-summary  saige_gene_burden.tsv \
+  --rare-gene-col gene \
+  --score-mode    pvalue --p-col P \
+  --cds-length    gene_union_cds.tsv --cds-col union_cds_length --cds-scale raw \
+  --sets          regulons_symbol.gmt --id-type symbol \
+  --gene-loc      NCBI38.gene.loc \
+  --expr-stats    ras_ct_output/scz_ct_expr_stats.tsv \
+  --n-null 1000 --q-bins 10 \
+  --out           rgs_rare_out/scz_ct
+```
+
+### Parameters — core
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `--mode` | str | required | `sc` = real regulons only; `ct` = REAL + matched NULLs (feeds `trs`). |
+| `--rare-summary` | path | required | Gene-level rare-variant summary CSV/TSV. |
+| `--rare-gene-col` | str | required | Gene column in `--rare-summary`. |
+| `--rare-id-type` | str | `symbol` | Gene ID type in the rare summary: `symbol` or `entrez`. |
+| `--score-mode` | str | required | `pvalue` (uses `--p-col` → `-log10(P)`), `logbf` (uses `--logbf-col`), or `direct` (uses `--score-col` verbatim). |
+| `--p-col` / `--logbf-col` / `--score-col` | str | — | Column matching the chosen `--score-mode`. |
+| `--top-winsor` | float | 0.01 | Upper-tail winsorisation fraction for gene-level rare scores. |
+| `--sets` | path | required | Regulon GMT (Symbol or Entrez). |
+| `--id-type` | str | `symbol` | Gene ID type in `--sets`. |
+| `--out` | str | required | Output file prefix. |
+| `--gene-loc` | path | — | MAGMA `NCBI*.gene.loc` for Symbol ↔ Entrez mapping (required when input ID types differ). |
+| `--min_genes` | int | 0 | Minimum overlap size for a regulon to be tested. |
+| `--max-regulon-frac` | float | 0.5 | Skip regulons covering more than this fraction of the gene universe. |
+
+### Parameters — CDS covariate
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `--cds-length` | path | — | Optional CDS length table. If omitted, the CDS column is looked up in `--rare-summary`. |
+| `--cds-gene-col` | str | `symbol` | Gene column in `--cds-length`. |
+| `--cds-id-type` | str | `symbol` | Gene ID type in `--cds-length`. |
+| `--cds-col` | str | `union_cds_length` | CDS covariate column name. |
+| `--cds-scale` | str | `raw` | `raw` — raw union CDS length, internally `log1p` + z-scored. `z_log` — already a z-standardised log-CDS covariate; used as-is. |
+
+### Parameters — matched-null construction (`--mode ct`)
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `--expr-stats` | path | — | Precomputed expression stats TSV. Reuses the file emitted by `ras --emit-expr-stats`. |
+| `--emit-expr-stats` | bool | False | If True and `--expr-stats` is missing, compute from `--matrix-stats` and save. |
+| `--matrix-stats` | path | — | Expression matrix used only when computing expr-stats on the fly. |
+| `--n-null` / `--null` | int | 1000 | Number of matched null regulons per real regulon. |
+| `--seed` | int | 2025 | Seed for null sampling. |
+| `--q-bins` | int | 5 | Quantile bins for matched-null construction (use `10` for stricter matching). |
+| `--exclude-self` | bool | True | Exclude real-regulon genes when sampling nulls. |
+| `--min-bucket-size` | int | 5 | Minimum matched-bucket size before falling back to a coarser stratum. |
+| `--fdr-method` | str | `BH` | FDR method for the empirical audit table (`BH` or `BY`). |
+| `--save-null-gmt` | path | — | Path to save REAL+NULL GMT (working ID type). |
+| `--save-null-gmt-symbol` / `--save-null-gmt-entrez` | path | — | Also save REAL+NULL GMT in Symbol / Entrez format. |
+
+**Outputs**
+
+| File | Description |
+|------|-------------|
+| `<out>.gsa_RGS.csv` | Regulon-level RGS table. `sc`: `Regulon, GeneSet, NGENES, BETA, BETA_STD, SE, P, RGS_z, RGS_mlog10P`. `ct`: additionally `RBP, SET_KIND, NULL_ID`. |
+| `<out>_gene_scores.tsv` | Per-gene rare score with winsorised / z-scored columns and CDS covariate. |
+| `<out>_REAL_PLUS_NULLS.<idtype>.gmt` | *(ct only)* REAL + NULL regulons; drop-in for `ras.py` if you wish to recompute RAS on the null sets. |
+| `<out>.null_index.tsv` | *(ct only)* Index of every REAL/NULL set with sizes. |
+| `<out>_empirical.csv` | *(ct only)* Audit table: `P_empirical`, `z_empirical`, `FDR_empirical`, `P_param`, `FDR_param`. |
+
+---
+
+## Step 12: trs {#step-12-trs}
 
 Integrate RAS and RGS into a unified **Trait Relevance Score (TRS)**:
 
@@ -319,21 +490,35 @@ $$
 \text{TRS} = \text{norm(RAS)} + \text{norm(RGS)} - \lambda \times |\text{norm(RAS)} - \text{norm(RGS)}|
 $$
 
+The same `trs` command consumes either the **common-variant** RGS from `rgs`
+or the **rare-variant** RGS from `rgs_rare` — simply point `--rgs-csv` at the
+CSV you want to integrate.
+
 ```bash
+# Common-variant TRS
 scRBP trs \
   --mode ct \
-  --ras ras_ct.csv \
-  --rgs-csv rgs_output.csv \
-  --out-prefix trs_results \
-  --lambda-penalty 1.0 \
-  --rgs-score mlog10p
+  --ras ras_out/scz.loom \
+  --rgs-csv rgs_out/scz_real.csv \
+  --out-prefix trs_out/scz_common \
+  --lambda-penalty 1.0 --rgs-score mlog10p \
+  --celltypes-csv celltypes.csv
+
+# Rare-variant TRS — same command, different RGS file
+scRBP trs \
+  --mode ct \
+  --ras ras_out/scz.loom \
+  --rgs-csv rgs_rare_out/scz_ct.gsa_RGS.csv \
+  --out-prefix trs_out/scz_rare \
+  --lambda-penalty 1.0 --rgs-score mlog10p \
+  --celltypes-csv celltypes.csv
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `--mode` | str | required | `sc` (single-cell) or `ct` (cell-type) |
-| `--ras` | path | required | RAS `.csv` from `ras` step |
-| `--rgs-csv` | path | required | RGS `.csv` from `rgs` step |
+| `--ras` | path | required | RAS matrix from `ras` (`.csv` / `.loom`) |
+| `--rgs-csv` | path | required | RGS `.csv` — common-variant from `rgs` **or** rare-variant `<out>.gsa_RGS.csv` from `rgs_rare` |
 | `--out-prefix` | str | required | Output file prefix |
 | `--rgs-score` | str | `mlog10p` | RGS score column to use: `mlog10p` or `z` |
 | `--lambda-penalty` | float | 1.0 | Penalty for RAS–RGS divergence (λ in TRS formula) |

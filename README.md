@@ -8,23 +8,25 @@
 
 **A scalable framework for inferring RNA-binding protein regulons from single-cell transcriptomic data**
 
-![pypi](https://img.shields.io/badge/pypi-0.1.3-green)
+![pypi](https://img.shields.io/badge/pypi-0.1.4.1-green)
 ![python](https://img.shields.io/badge/python-3.9--3.11-blue)
 ![license](https://img.shields.io/badge/license-MIT-yellow)
 
-**scRBP (Single-cell RNA Binding Protein Regulon Inference)** is a command-line toolkit for comprehensive analysis of RNA-binding proteins (RBPs) in single-cell RNA-seq data. scRBP provides a systematic, scalable and integrative framework to infer RBP-mediated gene and isoform regulatory networks ("regulons") from single-cell transcriptomes and prioritize networks underlying complex genetic traits and disorders. scRBP is comprised of six main modules: (i) developing a comprehensive compendium of RBPs and their associated motif clusters from diverse public resources; (ii) systematic, motif-guided transcriptome-wide inference of RBP targets at both gene- and isoform-level resolution; (iii) construction of RBP-gene and/or RBP-isoform co-expression networks from short- or long-read single-cell transcriptomic data, respectively; (iv) defining high-fidelity regulons by integrating RBP-target interactions, and quantifying cell type-specific regulon activity scores (RAS); (v) integrating GWAS results to compute regulon-level genetic association scores (RGS); and (vi) constructing a unified trait-relevance score (TRS) by combining RAS and RGS for each regulon in a given cellular context, with statistical significance assessed using Monte Carlo (MC) sampling.
+**scRBP (single-cell RNA-binding protein regulon inference)** is a command-line toolkit for reconstructing RNA-binding protein (RBP)-mediated regulatory programs from single-cell transcriptomic data and prioritizing regulons associated with complex traits and disorders. It supports both **gene-level** networks from short-read data and **isoform-level** networks from long-read data.
+
+The framework integrates six major analytical components: (i) a curated compendium of RBPs and clustered RBP-binding motifs assembled from public resources; (ii) motif-guided transcriptome-wide rankings of candidate RBP targets at gene and isoform resolution; (iii) inference of RBP–gene or RBP–isoform association networks from single-cell expression data (with optional mini-metacell densification for sparse inputs); (iv) motif-based refinement of candidate edges to define high-confidence regulons and quantify Regulon Activity Scores (RAS); (v) **parallel common- and rare-variant models** that map common-variant GWAS signals (MAGMA) *and* gene-level rare-variant evidence (TADA / SAIGE-GENE+ / burden / STAAR-O) to regulons to derive Regulon-level Genetic Association Scores (RGS); and (vi) integration of RAS with common- or rare-variant RGS into a Trait-Relevance Score (TRS) for each regulon within each cellular context, with significance evaluated against matched-null regulons via Monte Carlo sampling.
 
 ---
 
 ## What scRBP Does
 
-RBPs are key post-transcriptional regulators that control mRNA splicing, stability, and translation. scRBP enables you to:
+RBPs regulate multiple layers of post-transcriptional gene control, including RNA splicing, localization, stability, and translation. scRBP enables you to:
 
-- **Construct** which RBPs regulate which genes or isoforms in your single-cell data
-- **Prune** raw RBP–gene associations using motif-binding evidence to obtain high-confidence regulons
-- **Score** each cell or cell type for regulon activity score (RAS) using the AUCell algorithm
-- **Link** RBP regulons to human disease through GWAS genetic enrichment (RGS via MAGMA)
-- **Integrate** RAS and RGS into a unified Trait Relevance Score (TRS) that ranks disease-relevant RBPs
+- **Infer** candidate RBP–gene or RBP–isoform association networks from single-cell transcriptomes
+- **Refine** candidate RBP–target edges using sequence-motif evidence to define high-confidence regulons
+- **Quantify** regulon activity at single-cell or cell-type resolution using AUCell (RAS)
+- **Evaluate** both common-variant (MAGMA) **and** rare-variant (TADA / burden / logBF) enrichment per regulon (RGS)
+- **Prioritize** trait-relevant RBP regulons via a unified Trait-Relevance Score (TRS) that consumes either RGS flavour
 
 ---
 
@@ -34,53 +36,66 @@ RBPs are key post-transcriptional regulators that control mRNA splicing, stabili
 Raw single-cell data (.h5ad / .feather)
           │
           ▼
-[Step 1]  scRBP getSketch        ── Stratified GeoSketch cell downsampling
+[Step 1]  scRBP getSketch        ── Stratified GeoSketch downsampling (optional)
           │
           ▼
-[Step 2]  scRBP getGRN           ── GRNBoost2/GENIE3 RBP→Gene/Isoform inference
-          │                          (run N seeds for robustness, default 30 times)
+[Step 2]  scRBP getMetacell      ── Aggregate similar cells into mini-metacells (optional;
+          │                          for the GRN branch on sparse inputs)
           ▼
-[Step 3]  scRBP getMerge_GRN     ── Merge N-seed GRNs → consensus network
+[Step 3]  scRBP getGRN           ── GRNBoost2/GENIE3 RBP→gene or RBP→isoform inference
+          │                          (run multiple random seeds; 30 runs recommended)
+          ▼
+[Step 4]  scRBP getMerge_GRN     ── Merge multi-seed GRNs into a consensus network
           │
           ▼
-[Step 4]  scRBP getModule        ── Extract regulon candidates (Top-N / percentile)
+[Step 5]  scRBP getModule        ── Extract regulon candidates (Top-N / percentile)
           │
           ▼
-[Step 5]  scRBP getPrune         ── Motif-enrichment pruning via ctxcore
+[Step 6]  scRBP getPrune         ── Motif-enrichment pruning via ctxcore
           │
           ▼
-[Step 6]  scRBP getRegulon       ── Export pruned regulons to GMT format
+[Step 7]  scRBP getRegulon       ── Export pruned regulons to GMT format
           │
           ▼
-[Step 7]  scRBP mergeRegulons    ── Merge region-specific GMT files
-          │                          (3'UTR / 5'UTR / CDS / Introns)
+[Step 8]  scRBP mergeRegulons    ── Merge region-specific GMT files
+          │                          (3'UTR / 5'UTR / CDS / Intron)
           ▼
-[Step 8]  scRBP ras              ── Regulon Activity Score (RAS) per cell / cell type
+[Step 9]  scRBP ras              ── Regulon Activity Score (RAS) per cell / cell type
           │                          (--mode sc | --mode ct)
           ▼
-[Step 9]  scRBP rgs              ── Regulon Gene-Set analysis (RGS)
-          │                          (--mode sc | --mode ct)
+[Step 10] scRBP rgs              ── Common-variant RGS via MAGMA (--mode sc | --mode ct)
+          │
           ▼
-[Step 10] scRBP trs              ── Trait Relevance Score (TRS, integrating RAS with RGS)
-                                     (--mode sc | --mode ct)
+[Step 11] scRBP rgs_rare         ── Rare-variant RGS via competitive gene-set regression
+          │                          (TADA / logBF / burden; --mode sc | --mode ct)
+          ▼
+[Step 12] scRBP trs              ── Trait-Relevance Score (RAS × RGS integration)
+                                     (common- OR rare-variant; --mode sc | --mode ct)
 ```
+
+> Steps 2 (**getMetacell**) and 11 (**rgs_rare**) are new in v0.1.4.1.
+> `getMetacell` is optional and only used for the GRN branch on sparse inputs;
+> `rgs_rare` runs in parallel to `rgs` and feeds `scRBP trs` in the same way
+> to produce a **rare-variant TRS**.
 
 ---
 
 ## Command Reference
 
-| Step | Command                       | Key Inputs                    | Key Output                                            |
-| ---- | ----------------------------- | ----------------------------- | ----------------------------------------------------- |
-| 1    | `scRBP getSketch`             | `.h5ad` / `.feather`          | Downsampled cells                                     |
-| 2    | `scRBP getGRN`                | Expression matrix, RBP list   | `*_scRBP_gene_GRNs.tsv` or `*_scRBP_isoform_GRNs.tsv` |
-| 3    | `scRBP getMerge_GRN`          | Multiple GRN TSV files (glob) | Consensus GRN TSV                                     |
-| 4    | `scRBP getModule`             | Consensus GRN TSV             | Modules TSV                                           |
-| 5    | `scRBP getPrune`              | Modules TSV, motif files      | Pruned scores (Parquet)                               |
-| 6    | `scRBP getRegulon`            | Pruned scores                 | Regulons GMT (symbol + Entrez)                        |
-| 7    | `scRBP mergeRegulons`         | Multiple GMT files            | Merged GMT                                            |
-| 8    | `scRBP ras` (`--mode sc\|ct`) | Expression matrix, GMT        | single-cell RAS matrix, cell-type RAS matrix          |
-| 9    | `scRBP rgs` (`--mode sc\|ct`) | MAGMA `.genes.raw`, GMT       | RGS scores CSV                                        |
-| 10   | `scRBP trs` (`--mode sc\|ct`) | RAS CSV, RGS CSV              | TRS scores CSV                                        |
+| Step | Command                            | Key Inputs                                                   | Key Output                                                 |
+| ---- | ---------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------- |
+| 1    | `scRBP getSketch`                  | `.h5ad` / `.feather`                                         | Downsampled cells                                          |
+| 2    | `scRBP getMetacell` *(optional)*   | `.h5ad` (with cell-type col) / `.feather`                    | Metacell matrix (gene × metacell) + metacell→cell-type map |
+| 3    | `scRBP getGRN`                     | Expression / metacell matrix, RBP list                       | `*_scRBP_gene_GRNs.tsv` or `*_scRBP_isoform_GRNs.tsv`      |
+| 4    | `scRBP getMerge_GRN`               | Multiple GRN TSV files (glob)                                | Consensus GRN TSV                                          |
+| 5    | `scRBP getModule`                  | Consensus GRN TSV                                            | Modules TSV                                                |
+| 6    | `scRBP getPrune`                   | Modules TSV, motif files                                     | Pruned scores (Parquet)                                    |
+| 7    | `scRBP getRegulon`                 | Pruned scores                                                | Regulons GMT (symbol + Entrez)                             |
+| 8    | `scRBP mergeRegulons`              | Multiple GMT files                                           | Merged GMT                                                 |
+| 9    | `scRBP ras` (`--mode sc\|ct`)      | Expression matrix, GMT                                       | RAS matrix (`.csv` / `.loom`) + per-gene expr-stats TSV    |
+| 10   | `scRBP rgs` (`--mode sc\|ct`)      | MAGMA `.genes.raw`, GMT, expr-stats                          | Common-variant RGS scores CSV                              |
+| 11   | `scRBP rgs_rare` (`--mode sc\|ct`) | Gene-level rare variant summary (TADA / burden / …), GMT, expr-stats | Rare-variant RGS scores CSV (+ REAL/NULL GMT in ct mode)   |
+| 12   | `scRBP trs` (`--mode sc\|ct`)      | RAS matrix, RGS CSV (common **or** rare variant)             | TRS scores CSV                                             |
 
 Use `scRBP <command> --help` to see all parameters for any step.
 
@@ -95,7 +110,7 @@ Use `scRBP <command> --help` to see all parameters for any step.
 
 If you use scRBP in your research, please cite:
 
-> Ma Y. *et al.* *Decoding disease-associated RNA-binding protein-mediated regulatory networks through polygenic enrichment across diverse cellular contexts.* (2026)
+> Ma Y. *et al.* Single-cell maps of RNA-binding protein networks reveal post-transcriptional architecture across development and disease.* (2026)
 
 ---
 
